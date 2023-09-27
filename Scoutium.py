@@ -1,46 +1,3 @@
-####################
-# İş Problemi: Scout’lar tarafından izlenen futbolcuların özelliklerine verilen puanlara göre, oyuncuların hangi sınıf
-# (average, highlighted) oyuncu olduğunu tahminleme.
-####################
-
-
-#####################################
-# Veri Seti Hikayesi : Veri seti Scoutium’dan maçlarda gözlemlenen futbolcuların özelliklerine göre
-# scoutların değerlendirdikleri futbolcuların, maç içerisinde puanlanan özellikleri ve puanlarını içeren
-# bilgilerden oluşmaktadır.
-
-# scoutium_attributes.csv
-
-# task_response_id : Bir scoutun bir maçta bir takımın kadrosundaki tüm oyunculara dair değerlendirmelerinin kümesi
-# match_id : İlgili maçın id'si
-# evaluator_id : Değerlendiricinin(scout'un) id'si
-# player_id : İlgili oyuncunun id'si
-# position_id : İlgili oyuncunun o maçta oynadığı pozisyonun id’si
-# 1: Kaleci
-# 2: Stoper
-# 3: Sağ bek
-# 4: Sol bek
-# 5: Defansif orta saha
-# 6: Merkez orta saha
-# 7: Sağ kanat
-# 8: Sol kanat
-# 9: Ofansif orta saha
-# 10: Forvet
-# analysis_id : Bir scoutun bir maçta bir oyuncuya dair özellik değerlendirmelerini içeren küme
-# attribute_id : Oyuncuların değerlendirildiği her bir özelliğin id'si
-# attribute_value : Bir scoutun bir oyuncunun bir özelliğine verdiği değer(puan)
-
-
-# scoutium_potential_labels.csv
-
-# task_response_id : Bir scoutun bir maçta bir takımın kadrosundaki tüm oyunculara dair değerlendirmelerinin kümesi
-# match_id : İlgili maçın id'si
-# evaluator_id : Değerlendiricinin(scout'un) id'si
-# player_id : İlgili oyuncunun id'si
-# potential_label : Bir scoutun bir maçta bir oyuncuyla ilgili nihai kararını belirten etiket. (hedef değişken)
-
-##################################
-
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
@@ -122,6 +79,8 @@ df_table.head()
 
 df_table.info()
 
+
+
 #######################
 # Adım 6: : Label Encoder fonksiyonunu kullanarak “potential_label” kategorilerini
 #           (average, highlighted) sayısal olarak ifade ediniz.
@@ -129,7 +88,6 @@ df_table.info()
 
 df_table["potential_label"] = LabelEncoder().fit_transform(df_table["potential_label"])
 df_table.head()
-
 
 
 
@@ -186,49 +144,6 @@ for name, model in models:
     print(f"Precision: {round(cv_results['test_precision'].mean(), 4)}")
     print(f"F1: {round(cv_results['test_f1'].mean(), 4)}")
 
-# ########## KNN ##########
-# Accuracy: 0.8522
-# Auc: 0.7663
-# Recall: 0.3233
-# Precision: 0.8333
-# F1: 0.4463
-# ########## CART ##########
-# Accuracy: 0.8192
-# Auc: 0.7361
-# Recall: 0.5933
-# Precision: 0.5708
-# F1: 0.5694
-# ########## RF ##########
-# Accuracy: 0.8782
-# Auc: 0.9133
-# Recall: 0.47
-# Precision: 0.9167
-# F1: 0.5956
-# ########## GBM ##########
-# Accuracy: 0.8524
-# Auc: 0.8895
-# Recall: 0.5233
-# Precision: 0.705
-# F1: 0.587
-# ########## XGBoost ##########
-# Accuracy: 0.8672
-# Auc: 0.8771
-# Recall: 0.61
-# Precision: 0.7608
-# F1: 0.6447
-# ########## CatBoost ##########
-# Accuracy: 0.8856
-# Auc: 0.9015
-# Recall: 0.47
-# Precision: 0.9667
-# F1: 0.6088
-# ########## LightGBM ##########
-# Accuracy: 0.8856
-# Auc: 0.889
-# Recall: 0.5767
-# Precision: 0.8464
-# F1: 0.6605
-
 
 
 #######################
@@ -252,72 +167,3 @@ model = LGBMClassifier()
 model.fit(X, y)
 
 plot_importance(model, X)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-knn_params = {"n_neighbors": range(2, 50)}
-
-cart_params = {'max_depth': range(1, 20),
-               "min_samples_split": range(2, 30)}
-
-rf_params = {"max_depth": [8, 15, None],
-             "max_features": [5, 7, "auto"],
-             "min_samples_split": [15, 20],
-             "n_estimators": [200, 300]}
-
-xgboost_params = {"learning_rate": [0.1, 0.01],
-                  "max_depth": [5, 8],
-                  "n_estimators": [100, 200],
-                  "colsample_bytree": [0.5, 1]}
-
-lightgbm_params = {"learning_rate": [0.01, 0.1],
-                   "n_estimators": [300, 500],
-                   "colsample_bytree": [0.7, 1]}
-
-classifiers = [('KNN', KNeighborsClassifier(), knn_params),
-               ("CART", DecisionTreeClassifier(), cart_params),
-               ("RF", RandomForestClassifier(), rf_params),
-               ('XGBoost', XGBClassifier(use_label_encoder=False, eval_metric='logloss'), xgboost_params),
-               ('LightGBM', LGBMClassifier(), lightgbm_params)]
-
-
-def hyperparameter_optimization(X, y, cv=3, scoring="roc_auc"):
-    print("Hyperparameter Optimization....")
-    best_models = {}
-    for name, classifier, params in classifiers:
-        print(f"########## {name} ##########")
-        cv_results = cross_validate(classifier, X, y, cv=cv, scoring=scoring)
-        print(f"{scoring} (Before): {round(cv_results['test_score'].mean(), 4)}")
-
-        gs_best = GridSearchCV(classifier, params, cv=cv, n_jobs=-1, verbose=False).fit(X, y)
-        final_model = classifier.set_params(**gs_best.best_params_)
-
-        cv_results = cross_validate(final_model, X, y, cv=cv, scoring=scoring)
-        print(f"{scoring} (After): {round(cv_results['test_score'].mean(), 4)}")
-        print(f"{name} best params: {gs_best.best_params_}", end="\n\n")
-        best_models[name] = final_model
-    return best_models
-
-best_models = hyperparameter_optimization(X, y)
-
-# ########## RF ##########
-# roc_auc (Before): 0.8884
-# roc_auc (After): 0.8906
-# RF best params: {'max_depth': 8, 'max_features': 'auto', 'min_samples_split': 15, 'n_estimators': 200}
